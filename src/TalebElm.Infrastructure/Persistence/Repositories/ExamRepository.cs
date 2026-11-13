@@ -22,7 +22,7 @@ public class ExamRepository(AppDbContext context) : IExamRepository
         return await context.Set<Exam>().FindAsync([id], ct);
     }
 
-    public async Task<Exam?> GetWithQuestionsAsync(Guid examId)
+    public async Task<Exam?> GetWithQuestionsAsync(Guid examId, CancellationToken ct = default)
     {
         return await context.Set<Exam>()
             .Include(e => e.Questions)

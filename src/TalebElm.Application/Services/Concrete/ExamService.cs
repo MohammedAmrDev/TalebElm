@@ -32,7 +32,7 @@ public class ExamService(IUnitOfWork unitOfWork) : IExamService
     {
         if (request.Answers is null)
             throw new ValidationException("Answers are required.");
-        var exam = await unitOfWork.Exams.GetWithQuestionsAsync(request.ExamId) ?? throw new NotFoundException($"Exam {request.ExamId} was not found.");
+        var exam = await unitOfWork.Exams.GetWithQuestionsAsync(request.ExamId, ct) ?? throw new NotFoundException($"Exam {request.ExamId} was not found.");
         var questionIds = exam.Questions.Select(q => q.Id).ToHashSet();
 
         // Checks each answer belongs to the exam and not duplicated
@@ -70,7 +70,7 @@ public class ExamService(IUnitOfWork unitOfWork) : IExamService
             MidpointRounding.AwayFromZero);
 
         // Update progress for this learner and this exam's module.
-        var progress = await unitOfWork.UserProgresses.GetByUserAndModuleAsync(learnerId, exam.ModuleId)
+        var progress = await unitOfWork.UserProgresses.GetByUserAndModuleAsync(learnerId, exam.ModuleId, ct)
             ?? throw new NotFoundException($"Progress for learner {learnerId} was not found.");
 
         var passed = exam.HasPassed(score);
@@ -78,7 +78,7 @@ public class ExamService(IUnitOfWork unitOfWork) : IExamService
         progress.Score = score;
         progress.PassedExam |= passed;
 
-        await unitOfWork.SaveChangesAsync();
+        await unitOfWork.SaveChangesAsync(ct);
 
         return new ExamResultResponse(exam.Id, passed, score);
     }
